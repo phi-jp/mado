@@ -1,2 +1,2 @@
-# mado
-markdown editor
+# electron-markdown-editor
+electron-markdown-editor
