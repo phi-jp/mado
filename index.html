@@ -5,6 +5,8 @@
     <meta charset='utf-8' />
     <title>mado | Markdown Editor</title>
 
+    <link rel='stylesheet' href='http://cdn.rawgit.com/jasonm23/markdown-css-themes/gh-pages/markdown7.css' />
+
     <!-- ace -->
     <script src='http://cdn.jsdelivr.net/ace/1.2.0/min/ace.js'></script>
     <script src='http://cdn.jsdelivr.net/ace/1.2.0/min/ext-language_tools.js'></script>
@@ -12,34 +14,42 @@
 
     <!-- marked -->
     <script src='https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.js'></script>
-    <!-- jframe -->
-    <script src='http://cdn.rawgit.com/phi-jp/jframe/0.0.2/jframe.js'></script>
+    <!-- syncroll.js -->
+    <script src='http://cdn.rawgit.com/phi-jp/syncroll.js/8834f0e8dc4907005712d92455457e025f9f5ce8/syncroll.js'></script>
+
   </head>
   <body>
-    <div id='editor'></div>
-    <div id='preview'></div>
+    <div id='app'>
+      <div id='editor'></div>
+      <div id='preview' v-html='input | marked'></div>
+    </div>
   </body>
 </html>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 62.5%;
+}
+
 #editor, #preview {
   position: absolute;
   width: 50vw;
   height: 100vh;
   top: 0px;
+  overflow: scroll;
 }
 #editor {
   left: 0px;
 }
 #preview {
   right: 0px;
+  padding: 2rem;
 }
 
-#preview iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
 </style>
 
 <script>
@@ -56,7 +66,8 @@ var open = function(filename) {
     fs.readFile(filename, 'utf8', function(error, data) {
       if (error) { throw error; }
       file.filename = filename;
-      sync(data);
+
+      editor.setValue(data);
 
       localStorage.setItem('history', file.filename);
       console.log('opened', filename);
@@ -123,6 +134,19 @@ Menu.setApplicationMenu(menu);
 </script>
 
 <script>
+var Vue = require('vue');
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    filename: null,
+    input: '',
+  },
+  filters: {
+    marked: marked,
+  },
+});
+
 
 var styleFile = 'http://cdn.rawgit.com/jasonm23/markdown-css-themes/gh-pages/markdown7.css';
 var pluginsCode = '<link rel="stylesheet" href="' + styleFile + '" />' + '';
@@ -135,32 +159,23 @@ window.onload = function() {
   editor.$blockScrolling = Infinity;
   editor.setTheme("ace/theme/monokai");
   editor.getSession().setMode("ace/mode/markdown");
-  editor.setFontSize(13);
+  editor.setFontSize(12);
   editor.setValue('# title');
   editor.getSession().setTabSize(2);
-
-  // preview
-  preview = jframe("#preview");
-  preview.load(pluginsCode);
+  editor.getSession().setUseWrapMode(true);
   
-  editor.on('change', convert);
-  convert();
+  editor.on('change', function() {
+    app.$data.input = editor.getValue();
+  });
+  app.$data.input = editor.getValue();
 
   // open from history
   var filename = localStorage.getItem('history');
   open(filename);
-};
 
-// convert
-var convert = function() {
-  var v = editor.getValue();
-  var code = marked(v);
-  preview.getDocument().body.innerHTML = code;
-};
-
-var sync = function(v) {
-  editor.setValue(v);
-  convert();
+  setTimeout(function() {
+    syncroll('.ace_scrollbar,#preview');
+  }, 200);
 };
 
 </script>
