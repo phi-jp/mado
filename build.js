@@ -8,7 +8,7 @@ packager({
   platform: 'darwin', // or win32
   arch: 'x64',        // 64bit
   version: '0.34.2',  // electron のバージョン
-  icon: './app.icns', // アイコン
+  icon: './icon.icns', // アイコン
 
   'app-bundle-id': 'jp.phi.mado', // ドメイン
   'app-version': config.version,          // バージョン
